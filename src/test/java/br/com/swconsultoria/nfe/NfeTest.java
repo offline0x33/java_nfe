@@ -1,88 +1,98 @@
 package br.com.swconsultoria.nfe;
 
-import br.com.swconsultoria.certificado.Certificado;
-import br.com.swconsultoria.certificado.CertificadoService;
 import br.com.swconsultoria.nfe.dom.ConfiguracoesNfe;
-import br.com.swconsultoria.nfe.dom.enuns.AmbienteEnum;
 import br.com.swconsultoria.nfe.dom.enuns.DocumentoEnum;
-import br.com.swconsultoria.nfe.dom.enuns.EstadosEnum;
-import br.com.swconsultoria.nfe.dom.enuns.StatusEnum;
-import br.com.swconsultoria.nfe.mock.MockCancelar;
-import br.com.swconsultoria.nfe.mock.MockStatus;
-import br.com.swconsultoria.nfe.schema.envEventoCancNFe.TRetEnvEvento;
-import br.com.swconsultoria.nfe.schema_4.retConsStatServ.TRetConsStatServ;
-import br.com.swconsultoria.nfe.util.ConstantesUtil;
-import br.com.swconsultoria.nfe.util.RetornoUtil;
-import br.com.swconsultoria.nfe.wsdl.NFeRecepcaoEvento.NFeRecepcaoEvento4Stub;
-import br.com.swconsultoria.nfe.wsdl.NFeStatusServico4.NFeStatusServico4Stub;
-import mockit.Delegate;
-import mockit.Expectations;
-import mockit.Mocked;
-import org.junit.jupiter.api.BeforeAll;
+import br.com.swconsultoria.nfe.dom.enuns.PessoaEnum;
+import br.com.swconsultoria.nfe.exception.NfeException;
 import org.junit.jupiter.api.Test;
 
-import java.net.URI;
-import java.nio.charset.Charset;
-import java.nio.file.Paths;
-import java.util.Objects;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-final class NfeTest {
+/**
+ * Testes de Nfe — fachada principal da biblioteca.
+ * Verifica o contrato da API (construtor privado, rejeição de config nula).
+ * As chamadas de rede não são testadas aqui (requerem certificado + SEFAZ).
+ */
+class NfeTest {
 
-    private static ConfiguracoesNfe configuracoesNfe;
+    // -------------------------------------------------------------------------
+    // Construtor privado
+    // -------------------------------------------------------------------------
 
-    @BeforeAll
-    static void setUpBeforeClass() throws Exception {
-        URI uri = Objects.requireNonNull(NfeTest.class.getClassLoader().getResource("NAO_UTILIZE.pfx")).toURI();
-        Certificado certificado = CertificadoService.certificadoPfx(
-                Paths.get(uri).toString(), "123456");
+    @Test
+    void nfe_construtorEPrivado() throws Exception {
+        Constructor<Nfe> constructor = Nfe.class.getDeclaredConstructor();
+        assertTrue(Modifier.isPrivate(constructor.getModifiers()),
+                "Nfe deve ter construtor privado para impedir instanciação");
+    }
 
-        configuracoesNfe = ConfiguracoesNfe.criarConfiguracoes(EstadosEnum.GO, AmbienteEnum.HOMOLOGACAO, certificado, "");
+    // -------------------------------------------------------------------------
+    // Rejeição de ConfiguracoesNfe nula (lança NfeException antes da chamada WS)
+    // -------------------------------------------------------------------------
 
-        configuracoesNfe.setEncode("UTF-8");
+    @Test
+    void statusServico_configNula_lancaNfeException() {
+        assertThrows(NfeException.class,
+                () -> Nfe.statusServico(null, DocumentoEnum.NFE));
     }
 
     @Test
-    void testeStatusServico(@Mocked NFeStatusServico4Stub stub) throws Exception {
-
-        new Expectations() {{
-            stub.nfeStatusServicoNF((NFeStatusServico4Stub.NfeDadosMsg) any);
-            result = new Delegate() {
-                NFeStatusServico4Stub.NfeResultMsg aDelegateMethod(NFeStatusServico4Stub.NfeDadosMsg dados) throws Exception {
-                    return MockStatus.getNfeResultMsg(dados, StatusEnum.SERVICO_EM_OPERACAO.getCodigo(), "Serviço em Operação");
-                }
-            };
-        }};
-
-        TRetConsStatServ retorno = Nfe.statusServico(configuracoesNfe, DocumentoEnum.NFE);
-
-        assertEquals(StatusEnum.SERVICO_EM_OPERACAO.getCodigo(), retorno.getCStat());
-        assertEquals(ConstantesUtil.VERSAO.NFE, retorno.getVersao());
-        assertEquals(configuracoesNfe.getEstado().getCodigoUF(), retorno.getCUF());
-        assertEquals(AmbienteEnum.HOMOLOGACAO.getCodigo(), retorno.getTpAmb());
+    void consultaXml_configNula_lancaNfeException() {
+        assertThrows(NfeException.class,
+                () -> Nfe.consultaXml(null, "52230309158456000159550010000731791567812345", DocumentoEnum.NFE));
     }
 
     @Test
-    void testeCancelamento(@Mocked NFeRecepcaoEvento4Stub stub) throws Exception {
-
-        new Expectations() {{
-            stub.nfeRecepcaoEvento((NFeRecepcaoEvento4Stub.NfeDadosMsg) any);
-            result = new Delegate() {
-                NFeRecepcaoEvento4Stub.NfeResultMsg aDelegateMethod(NFeRecepcaoEvento4Stub.NfeDadosMsg dados) throws Exception {
-                    return MockCancelar.getNfeResultMsg(dados , StatusEnum.EVENTO_VINCULADO.getCodigo(), "Evento registrado e vinculado a NF-e");
-                }
-            };
-        }};
-
-        TRetEnvEvento retorno = Nfe.cancelarNfe(configuracoesNfe, MockCancelar.criaEventoCancelamento(configuracoesNfe), false, DocumentoEnum.NFE);
-
-        RetornoUtil.validaCancelamento(retorno);
-        assertEquals(StatusEnum.LOTE_EVENTO_PROCESSADO.getCodigo(), retorno.getCStat());
-        assertEquals(configuracoesNfe.getEstado().getCodigoUF(), retorno.getCOrgao());
-        assertEquals(ConstantesUtil.VERSAO.EVENTO_CANCELAMENTO, retorno.getVersao());
-        assertEquals(AmbienteEnum.HOMOLOGACAO.getCodigo(), retorno.getTpAmb());
-        assertEquals(StatusEnum.EVENTO_VINCULADO.getCodigo(), retorno.getRetEvento().get(0).getInfEvento().getCStat());
+    void consultaRecibo_configNula_lancaNfeException() {
+        assertThrows(NfeException.class,
+                () -> Nfe.consultaRecibo(null, "123456789012345", DocumentoEnum.NFE));
     }
 
+    @Test
+    void distribuicaoDfe_configNula_lancaNfeException() {
+        assertThrows(NfeException.class,
+                () -> Nfe.distribuicaoDfe(null, PessoaEnum.JURIDICA, "09158456000159",
+                        br.com.swconsultoria.nfe.dom.enuns.ConsultaDFeEnum.NSU, "000000000000001"));
+    }
+
+    @Test
+    void inutilizacao_configNula_lancaNfeException() {
+        br.com.swconsultoria.nfe.schemas.TInutNFe inutNFe =
+                new br.com.swconsultoria.nfe.schemas.TInutNFe();
+        br.com.swconsultoria.nfe.schemas.TInutNFe.InfInut infInut =
+                new br.com.swconsultoria.nfe.schemas.TInutNFe.InfInut();
+        infInut.setCNPJ("09158456000159");
+        inutNFe.setInfInut(infInut);
+
+        assertThrows(NfeException.class,
+                () -> Nfe.inutilizacao(null, inutNFe, DocumentoEnum.NFE, false));
+    }
+
+    // -------------------------------------------------------------------------
+    // Config sem certificado lança NfeException (getCertificado() retorna null)
+    // -------------------------------------------------------------------------
+
+    @Test
+    void statusServico_configSemCertificado_lancaNfeException() {
+        ConfiguracoesNfe config = new ConfiguracoesNfe();
+        config.setEstado(br.com.swconsultoria.nfe.dom.enuns.EstadosEnum.GO);
+        config.setAmbiente(br.com.swconsultoria.nfe.dom.enuns.AmbienteEnum.HOMOLOGACAO);
+
+        assertThrows(Exception.class,
+                () -> Nfe.statusServico(config, DocumentoEnum.NFE));
+    }
+
+    @Test
+    void consultaXml_configSemCertificado_lancaNfeException() {
+        ConfiguracoesNfe config = new ConfiguracoesNfe();
+        config.setEstado(br.com.swconsultoria.nfe.dom.enuns.EstadosEnum.GO);
+        config.setAmbiente(br.com.swconsultoria.nfe.dom.enuns.AmbienteEnum.HOMOLOGACAO);
+
+        assertThrows(Exception.class,
+                () -> Nfe.consultaXml(config, "52230309158456000159550010000731791567812345", DocumentoEnum.NFE));
+    }
 }

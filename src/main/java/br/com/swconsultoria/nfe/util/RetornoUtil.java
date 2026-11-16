@@ -2,9 +2,9 @@ package br.com.swconsultoria.nfe.util;
 
 import br.com.swconsultoria.nfe.dom.enuns.StatusEnum;
 import br.com.swconsultoria.nfe.exception.NfeException;
-import br.com.swconsultoria.nfe.schema.envEventoCancNFe.TRetEnvEvento;
-import br.com.swconsultoria.nfe.schema_4.enviNFe.TRetEnviNFe;
-import br.com.swconsultoria.nfe.schema_4.retConsReciNFe.TRetConsReciNFe;
+import br.com.swconsultoria.nfe.schemas.TRetConsReciNFe;
+import br.com.swconsultoria.nfe.schemas.TRetEnviNFe;
+import br.com.swconsultoria.nfe.schemas_eventos.TRetEnvEventoCancelamento;
 
 /**
  * @author Samuel Oliveira - samuk.exe@hotmail.com
@@ -35,20 +35,20 @@ public class RetornoUtil {
      * @param retorno
      * @throws NfeException
      */
-    public static void validaCancelamento(TRetEnvEvento retorno) throws NfeException {
+    public static void validaCancelamento(TRetEnvEventoCancelamento retorno) throws NfeException {
         if (!StatusEnum.LOTE_EVENTO_PROCESSADO.getCodigo().equals(retorno.getCStat())) {
             throw new NfeException(retorno.getCStat() + " - " + retorno.getXMotivo());
         }
 
         final String[] erro = {""};
-        retorno.getRetEvento().forEach( retEvento -> {
+        retorno.getRetEvento().forEach(retEvento -> {
             if (!StatusEnum.EVENTO_VINCULADO.getCodigo().equals(retEvento.getInfEvento().getCStat()) &&
-                    !StatusEnum.CANCELAMENTO_FORA_PRAZO.getCodigo().equals(retEvento.getInfEvento().getCStat())) {
-                erro[0] += retEvento.getInfEvento().getChNFe() + " - " +retEvento.getInfEvento().getCStat() + " - " + retEvento.getInfEvento().getXMotivo() + System.lineSeparator();
+                !StatusEnum.CANCELAMENTO_FORA_PRAZO.getCodigo().equals(retEvento.getInfEvento().getCStat())) {
+                erro[0] += retEvento.getInfEvento().getChNFe() + " - " + retEvento.getInfEvento().getCStat() + " - " + retEvento.getInfEvento().getXMotivo() + System.lineSeparator();
             }
         });
 
-        if(ObjetoUtil.verifica(erro[0]).isPresent()){
+        if (ObjetoUtil.verifica(erro[0]).isPresent()) {
             throw new NfeException(erro[0]);
         }
     }
@@ -59,19 +59,42 @@ public class RetornoUtil {
      * @param retorno
      * @throws NfeException
      */
-    public static void validaCancelamentoSubstituicao(br.com.swconsultoria.nfe.schema.envEventoCancSubst.TRetEnvEvento retorno) throws NfeException {
+    public static void validaCancelamentoSubstituicao(br.com.swconsultoria.nfe.schemas_eventos.TRetEnvEventoCancelamentoSubstituicao retorno) throws NfeException {
         if (!StatusEnum.LOTE_EVENTO_PROCESSADO.getCodigo().equals(retorno.getCStat())) {
             throw new NfeException(retorno.getCStat() + " - " + retorno.getXMotivo());
         }
 
         final String[] erro = {""};
-        retorno.getRetEvento().forEach( retEvento -> {
+        retorno.getRetEvento().forEach(retEvento -> {
             if (!StatusEnum.EVENTO_VINCULADO.getCodigo().equals(retEvento.getInfEvento().getCStat())) {
-                erro[0] += retEvento.getInfEvento().getChNFe() + " - " +retEvento.getInfEvento().getCStat() + " - " + retEvento.getInfEvento().getXMotivo() + System.lineSeparator();
+                erro[0] += retEvento.getInfEvento().getChNFe() + " - " + retEvento.getInfEvento().getCStat() + " - " + retEvento.getInfEvento().getXMotivo() + System.lineSeparator();
             }
         });
 
-        if(ObjetoUtil.verifica(erro[0]).isPresent()){
+        if (ObjetoUtil.verifica(erro[0]).isPresent()) {
+            throw new NfeException(erro[0]);
+        }
+    }
+
+    /**
+     * Valida o Retorno Do Evento Generico
+     *
+     * @param retorno
+     * @throws NfeException
+     */
+    public static void validaEventoGenerico(br.com.swconsultoria.nfe.schemas_eventos.TRetEnvEventoGenerico retorno) throws NfeException {
+        if (!StatusEnum.LOTE_EVENTO_PROCESSADO.getCodigo().equals(retorno.getCStat())) {
+            throw new NfeException(retorno.getCStat() + " - " + retorno.getXMotivo());
+        }
+
+        final String[] erro = {""};
+        retorno.getRetEvento().forEach(retEvento -> {
+            if (!StatusEnum.EVENTO_VINCULADO.getCodigo().equals(retEvento.getInfEvento().getCStat())) {
+                erro[0] += retEvento.getInfEvento().getChNFe() + " - " + retEvento.getInfEvento().getCStat() + " - " + retEvento.getInfEvento().getXMotivo() + System.lineSeparator();
+            }
+        });
+
+        if (ObjetoUtil.verifica(erro[0]).isPresent()) {
             throw new NfeException(erro[0]);
         }
     }
@@ -82,19 +105,19 @@ public class RetornoUtil {
      * @param retorno
      * @throws NfeException
      */
-    public static void validaManifestacao(br.com.swconsultoria.nfe.schema.envConfRecebto.TRetEnvEvento retorno) throws NfeException {
+    public static void validaManifestacao(br.com.swconsultoria.nfe.schemas_eventos.TRetEnvEventoManifestacao retorno) throws NfeException {
         if (!StatusEnum.LOTE_EVENTO_PROCESSADO.getCodigo().equals(retorno.getCStat())) {
             throw new NfeException(retorno.getCStat() + " - " + retorno.getXMotivo());
         }
 
         final String[] erro = {""};
-        retorno.getRetEvento().forEach( retEvento -> {
+        retorno.getRetEvento().forEach(retEvento -> {
             if (!StatusEnum.EVENTO_VINCULADO.getCodigo().equals(retEvento.getInfEvento().getCStat()) && !StatusEnum.EVENTO_REGISTRADO_NAO_VINCULADO.getCodigo().equals(retEvento.getInfEvento().getCStat())) {
-                erro[0] += retEvento.getInfEvento().getChNFe() + " - " +retEvento.getInfEvento().getCStat() + " - " + retEvento.getInfEvento().getXMotivo() + System.lineSeparator();
+                erro[0] += retEvento.getInfEvento().getChNFe() + " - " + retEvento.getInfEvento().getCStat() + " - " + retEvento.getInfEvento().getXMotivo() + System.lineSeparator();
             }
         });
 
-        if(ObjetoUtil.verifica(erro[0]).isPresent()){
+        if (ObjetoUtil.verifica(erro[0]).isPresent()) {
             throw new NfeException(erro[0]);
         }
 
@@ -106,18 +129,18 @@ public class RetornoUtil {
      * @param retorno
      * @throws NfeException
      */
-    public static void validaCartaCorrecao(br.com.swconsultoria.nfe.schema.envcce.TRetEnvEvento retorno) throws NfeException {
+    public static void validaCartaCorrecao(br.com.swconsultoria.nfe.schemas_eventos.TRetEnvEventoCartaCorrecao retorno) throws NfeException {
         if (!StatusEnum.LOTE_EVENTO_PROCESSADO.getCodigo().equals(retorno.getCStat())) {
             throw new NfeException(retorno.getCStat() + " - " + retorno.getXMotivo());
         }
         final String[] erro = {""};
-        retorno.getRetEvento().forEach( retEvento -> {
+        retorno.getRetEvento().forEach(retEvento -> {
             if (!StatusEnum.EVENTO_VINCULADO.getCodigo().equals(retEvento.getInfEvento().getCStat())) {
-                erro[0] += retEvento.getInfEvento().getChNFe() + " - " +retEvento.getInfEvento().getCStat() + " - " + retEvento.getInfEvento().getXMotivo() + System.lineSeparator();
+                erro[0] += retEvento.getInfEvento().getChNFe() + " - " + retEvento.getInfEvento().getCStat() + " - " + retEvento.getInfEvento().getXMotivo() + System.lineSeparator();
             }
         });
 
-        if(ObjetoUtil.verifica(erro[0]).isPresent()){
+        if (ObjetoUtil.verifica(erro[0]).isPresent()) {
             throw new NfeException(erro[0]);
         }
     }
@@ -128,20 +151,20 @@ public class RetornoUtil {
      * @param retorno
      * @throws NfeException
      */
-    public static void validaEpec(br.com.swconsultoria.nfe.schema.envEpec.TRetEnvEvento retorno) throws NfeException {
+    public static void validaEpec(br.com.swconsultoria.nfe.schemas_eventos.TRetEnvEventoEpec retorno) throws NfeException {
         if (!StatusEnum.LOTE_EVENTO_PROCESSADO.getCodigo().equals(retorno.getCStat())) {
             throw new NfeException(retorno.getCStat() + " - " + retorno.getXMotivo());
 
         }
 
         final String[] erro = {""};
-        retorno.getRetEvento().forEach( retEvento -> {
+        retorno.getRetEvento().forEach(retEvento -> {
             if (!StatusEnum.EVENTO_VINCULADO.getCodigo().equals(retEvento.getInfEvento().getCStat())) {
-                erro[0] += retEvento.getInfEvento().getChNFe() + " - " +retEvento.getInfEvento().getCStat() + " - " + retEvento.getInfEvento().getXMotivo() + System.lineSeparator();
+                erro[0] += retEvento.getInfEvento().getChNFe() + " - " + retEvento.getInfEvento().getCStat() + " - " + retEvento.getInfEvento().getXMotivo() + System.lineSeparator();
             }
         });
 
-        if(ObjetoUtil.verifica(erro[0]).isPresent()){
+        if (ObjetoUtil.verifica(erro[0]).isPresent()) {
             throw new NfeException(erro[0]);
         }
     }
@@ -152,7 +175,7 @@ public class RetornoUtil {
      * @param retorno
      * @throws NfeException
      */
-    public static void validaConsultaCadastro(br.com.swconsultoria.nfe.schema.retConsCad.TRetConsCad retorno) throws NfeException {
+    public static void validaConsultaCadastro(br.com.swconsultoria.nfe.schemas.TRetConsCad retorno) throws NfeException {
         if (!retorno.getInfCons().getCStat().equals(StatusEnum.CADASTRO_ENCONTRADO.getCodigo())) {
             throw new NfeException(retorno.getInfCons().getCStat() + " - " + retorno.getInfCons().getXMotivo());
         }
@@ -164,7 +187,7 @@ public class RetornoUtil {
      * @param retorno
      * @throws NfeException
      */
-    public static void validaInutilizacao(br.com.swconsultoria.nfe.schema_4.inutNFe.TRetInutNFe retorno) throws NfeException {
+    public static void validaInutilizacao(br.com.swconsultoria.nfe.schemas.TRetInutNFe retorno) throws NfeException {
         if (!retorno.getInfInut().getCStat().equals(StatusEnum.INUTILIZADO.getCodigo())) {
             throw new NfeException(retorno.getInfInut().getCStat() + " - " + retorno.getInfInut().getXMotivo());
         }
@@ -197,13 +220,13 @@ public class RetornoUtil {
         }
 
         final String[] erro = {""};
-        retorno.getProtNFe().forEach( protNFe -> {
+        retorno.getProtNFe().forEach(protNFe -> {
             if (!StatusEnum.AUTORIZADO.getCodigo().equals(protNFe.getInfProt().getCStat()) && !StatusEnum.AUTORIZADO_FORA_PRAZO.getCodigo().equals(protNFe.getInfProt().getCStat())) {
-                erro[0] += protNFe.getInfProt().getChNFe() + " - " +protNFe.getInfProt().getCStat() + " - " + protNFe.getInfProt().getXMotivo() + System.lineSeparator();
+                erro[0] += protNFe.getInfProt().getChNFe() + " - " + protNFe.getInfProt().getCStat() + " - " + protNFe.getInfProt().getXMotivo() + System.lineSeparator();
             }
         });
 
-        if(ObjetoUtil.verifica(erro[0]).isPresent()){
+        if (ObjetoUtil.verifica(erro[0]).isPresent()) {
             throw new NfeException(erro[0]);
         }
 
@@ -222,7 +245,7 @@ public class RetornoUtil {
         }
 
         if (!retorno.getProtNFe().getInfProt().getCStat().equals(StatusEnum.AUTORIZADO.getCodigo()) &&
-                !retorno.getProtNFe().getInfProt().getCStat().equals(StatusEnum.AUTORIZADO_FORA_PRAZO.getCodigo())) {
+            !retorno.getProtNFe().getInfProt().getCStat().equals(StatusEnum.AUTORIZADO_FORA_PRAZO.getCodigo())) {
             throw new NfeException(retorno.getProtNFe().getInfProt().getCStat() + " - " + retorno.getProtNFe().getInfProt().getXMotivo());
         }
     }

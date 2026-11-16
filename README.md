@@ -1,5 +1,10 @@
-# Java-NFe [![MIT License](https://img.shields.io/github/license/Samuel-Oliveira/Java_NFe.svg) ](https://github.com/Samuel-Oliveira/Java_NFe/blob/master/LICENSE) [![Maven Central](https://img.shields.io/maven-central/v/br.com.swconsultoria/java-nfe.svg?label=Maven%20Central)](https://search.maven.org/artifact/br.com.swconsultoria/java-nfe/4.00.35/jar)
+# Java-NFe [![MIT License](https://img.shields.io/github/license/Samuel-Oliveira/Java_NFe.svg) ](https://github.com/Samuel-Oliveira/Java_NFe/blob/master/LICENSE) [![Maven Central](https://img.shields.io/maven-central/v/br.com.swconsultoria/java-nfe.svg?label=Maven%20Central)](https://search.maven.org/artifact/br.com.swconsultoria/java-nfe/4.3.0/jar) [![Coverage Status](https://coveralls.io/repos/github/Samuel-Oliveira/Java_NFe/badge.svg?branch=master)](https://coveralls.io/github/Samuel-Oliveira/Java_NFe?branch=master)
 Biblioteca Java para consumo do WebService de NFe/NFCe
+
+### Powered by
+[![JetBrains logo.](https://resources.jetbrains.com/storage/products/company/brand/logos/jetbrains.svg)](https://jb.gg/OpenSource)
+
+Thanks to JetBrains for supporting this project! https://www.jetbrains.com/?from=Java_NFe
 
 ## Dúvidas, Sugestões ou Consultoria
 [![Java Brasil](https://discordapp.com/api/guilds/519583346066587676/widget.png?style=banner2)](https://discord.gg/ZXpqnaV)
@@ -17,7 +22,7 @@ Para Iniciar :
 <dependency>
     <groupId>br.com.swconsultoria</groupId>
     <artifactId>java-nfe</artifactId>
-    <version>4.00.35</version>
+    <version>4.3.0</version>
 </dependency>
 ```
 
@@ -29,7 +34,7 @@ repositories {
     }
 }
 dependencies {
-    implementation "br.com.swconsultoria:java-nfe:4.00.35"
+    implementation "br.com.swconsultoria:java-nfe:4.3.0"
 }
 ```
 
@@ -37,7 +42,116 @@ Veja a Wiki https://github.com/Samuel-Oliveira/Java_NFe/wiki, para ter um Tutori
 
 ________________________________________________________________________________________________
 
+## ⚠️ Atualizando de v4.00.x para v4.1.*?
+
+A v4.1.* **consolidou ~48 sub-packages JAXB em apenas 2** (`schemas` e `schemas_eventos`)
+e renomeou várias classes de evento para evitar colisões. Imports antigos como
+`schema_4.enviNFe.*`, `schema.envEventoCancNFe.*`, `schema.evento112110.DetEvento`
+**não compilam mais**.
+
+**Use o script automático de migração** — guia completo, tabela de renomeios,
+breaking changes e instruções de uso em **[MIGRATION.md](MIGRATION.md)**.
+
+Resumo: `pwsh scripts/migrate.ps1 -ProjectRoot . -BumpPom` (ou `bash scripts/migrate.sh`).
+
+________________________________________________________________________________________________
+
 # Historico de Versões
+
+## v4.3.0 - Schemas PL 010g
+- Adicionado DANFE v2 da NF-e no leiaute da NT 2026.010 (Reforma Tributária: IBS/CBS/IS) com Thymeleaf no lugar do Jasper (Ver manual em [docs/MANUAL-DANFE-V2.md](docs/MANUAL-DANFE-V2.md) e exemplo em: https://github.com/Samuel-Oliveira/Java_NFe/blob/master/src/test/java/br/com/swconsultoria/nfe/impressao/TesteImpressaoDanfeV2.java)
+- Atualizado Schemas
+
+## v4.2.0 - Schemas PL 010f NT 2025.002 v.1.50 e NT 2026.007 v.1.00
+- Alterado Schemas com novo modelo de monofasicos
+- Melhorias no IbsCbsUtil
+- Atualizado Cacert
+
+## v4.1.3 - Schemas PL 010e e RTC v1.40
+- Correcao de Base de calculo Cclasstrib icms 70
+- Correcao com reuso de cclasstrib
+- Correcao proc Eventos sem signature
+
+## v4.1.2 - Schemas PL 010e e RTC v1.40
+- Atualizado Schemas PL 010e e RTC v1.40
+- Atualizado Cacert
+
+## v4.1.1 - Schemas PL.010d
+- **Consolidação de packages JAXB**: `~48 sub-packages → schemas + schemas_eventos`
+- Adicionado processamento de eventos individuais da Reforma Tributária (`DetEvento110001`, `DetEvento112110-150`, `DetEvento211110-150` etc.) gerados como classes top-level com `@XmlRootElement`
+- Corrigido bug do `regenerate-jaxb` em que o `DetEvento` anônimo de cada evento colidia entre passes — agora cada evento tem sua própria classe nomeada via binding
+- Corrigido `package-info.java` de `schemas_eventos` (namespace estava apontando pra `xmldsig` em vez de `portalfiscal.inf.br/nfe`)
+- **BREAKING**: `TProtNFe.InfProt.getDhRecbto()` agora retorna `String` (era `XMLGregorianCalendar`) — ajuste callers que faziam conversão direta para `LocalDateTime`
+- Adicionado script automático de migração para projetos consumidores (ver [MIGRATION.md](MIGRATION.md))
+- Validado em 3 projetos consumidores: 1009 testes, 0 falhas
+
+## v4.00.51 - 19/03/2026 - Schemas PL.010b (v1.30)
+- Adicionado Teste Unitarios
+- Atualizado Cacert
+
+## v4.00.50 - 16/02/2026 - Schemas PL.010b (v1.30)
+- Ajustes Impressao Danfe
+
+## v4.00.49 - 18/01/2026 - Schemas PL.010b (v1.30)
+- Corrigido monofasia retida Anteriormente.
+- Adicionado calculos IBSCBS para Diferimento
+- Atualizado Cacerts
+- Corrigido Informacoes Fisco Impressao Danfe
+
+## v4.00.48 - 20/12/2025 - Schemas PL.010b (v1.30)
+- Adicionado Monofasico aos calculos IBSCBS
+- Corrigido busca de IBSCBS para multi-thread
+
+## v4.00.47 - 10/12/2025 - Schemas PL.010b (v1.30)
+- Correcoes calculos IBSCBS
+
+## v4.00.46 - 06/12/2025 - Schemas PL.010b (v1.30)
+- Atualizado Schemas PL.010b (v1.30) **CASO USE VALIDACAO ATUALIZE A PASTA SCHEMAS**
+- Adicionado novos eventos da reforma Tributaria (Ver exemplo em: https://github.com/Samuel-Oliveira/Java_NFe/blob/master/src/test/java/br/com/swconsultoria/nfe/exemplos/EventoGenericoTeste.java)
+- Adicionado ao projeto o calculo e preenchimento automatico do IBSCBS dos Itens e do Total (Ver exemplo em: https://github.com/Samuel-Oliveira/Java_NFe/blob/master/src/test/java/br/com/swconsultoria/nfe/exemplos/CalculosIbsCbsTeste.java)
+
+## v4.00.45 - 09/11/2025 - Schemas PL.010b (v1.1)
+- Adicionado Conculta ao JSON dos CST/Cclasstrib do IBSCBS (Ver exemplo em: https://github.com/Samuel-Oliveira/Java_NFe/blob/master/src/test/java/br/com/swconsultoria/nfe/exemplos/ConsultaTributacaoTeste.java)
+
+## v4.00.44 - 28/10/2025 - Schemas PL.010b (v1.1)
+- Correcao sequencia Manifestacao Util
+
+## v4.00.43 - 22/10/2025 - Schemas PL.010b (v1.1)
+- Correcoes EConf
+- Alterado Fonte Impressao Danfe NFe e NFCe de Times New Roman para Verdana
+- Correcao Manifestacao Util para Considerar mais de uma Sequencia
+
+## v4.00.42 - 31/08/2025 - Schemas PL.010b (v1.1)
+- Atualizado Schema Reforma Tributaria
+- Remoçao de classes duplicadas
+- Reforacao JAXB
+
+## v4.00.41 - 31/07/2025 - Schemas PL.009p1 e PL.010b
+- Alterado URLs Consulta Cadastro AM
+- Alterado URLs QRCode GO
+- Alterado URLs ConsultaNFCe RN
+- Atualizado Layout RT com Nota Técnica 2025.002.v.1.20
+- Adicionado Impressao de NFe, NFCe e CCe : https://github.com/Samuel-Oliveira/Java_NFe/wiki/14-:-Impressao
+
+## v4.00.40 - 06/07/2025 - Schemas PL.009p1 e PL.010b
+- Atualizado CACERT
+- Correcao QrCode NFC-e V3
+- Removido Ini4J (Vunerabilidade)
+
+## v4.00.39 - 21/06/2025 - Schemas PL.009p1 e PL.010b
+- Atualizado WebServices NFCe Ceara
+- Atualizado CACERT
+- Adicionado QrCode NFC-e V3
+- Adicionado Layout Reforma Tributária
+
+## v4.00.38 - 06/05/2025 - Schemas PL.009p1
+- Atualizado URL Consulta Cadastro RS
+
+## v4.00.37 - 05/04/2025 - Schemas PL.009p1
+- Atualizado CACERT
+
+## v4.00.36 - 10/03/2025 - Schemas PL.009p1
+- Atualizado Endereços SVC
 
 ## v4.00.35 - 01/12/2024 - Schemas PL.009p1
 - Atualizado CACERT
@@ -389,6 +503,3 @@ ________________________________________________________________________________
 
 ## v3.10.0 - 26-09-2016
 - Versão Inicial Do Sistema
-
-<img src="https://raw.githubusercontent.com/Samuel-Oliveira/Java_NFe/master/jetbrains.png" width="200">
-Thanks to JetBrains for supporting this project! https://www.jetbrains.com/?from=Java_NFe

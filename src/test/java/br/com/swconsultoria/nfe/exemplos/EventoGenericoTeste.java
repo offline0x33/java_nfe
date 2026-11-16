@@ -1,0 +1,85 @@
+/**
+ *
+ */
+package br.com.swconsultoria.nfe.exemplos;
+
+import br.com.swconsultoria.nfe.Nfe;
+import br.com.swconsultoria.nfe.dom.ConfiguracoesNfe;
+import br.com.swconsultoria.nfe.dom.Evento;
+import br.com.swconsultoria.nfe.dom.enuns.AmbienteEnum;
+import br.com.swconsultoria.nfe.dom.enuns.EstadosEnum;
+import br.com.swconsultoria.nfe.dom.enuns.EventosEnum;
+import br.com.swconsultoria.nfe.schemas_eventos.DetEvento112110;
+import br.com.swconsultoria.nfe.schemas_eventos.TEnvEventoGenerico;
+import br.com.swconsultoria.nfe.schemas_eventos.TRetEnvEventoGenerico;
+import br.com.swconsultoria.nfe.util.ConstantesUtil;
+import br.com.swconsultoria.nfe.util.EventoGenericoUtil;
+import br.com.swconsultoria.nfe.util.RetornoUtil;
+
+import java.time.LocalDateTime;
+
+/**
+ * @author Samuel Oliveira
+ */
+public class EventoGenericoTeste {
+
+    public static void main(String[] args) {
+
+        try {
+
+            // Inicia As Configurações
+            ConfiguracoesNfe config = ConfiguracaoTeste.iniciaConfiguracoes(EstadosEnum.GO, AmbienteEnum.HOMOLOGACAO);
+
+            //Dados Basicos Evento
+            Evento generico = new Evento();
+            generico.setChave("52250810732644000128550010000927491462345823");
+            generico.setCnpj("10732644000128");
+            generico.setSequencia(Integer.parseInt(System.getProperty("seqEvento", "2")));
+            generico.setDataEvento(LocalDateTime.now());
+
+            //Monta Eventos da Receita, Aqui pode ser qualquer um.
+            //Abaixo Exemplo do 112110
+            // O payload tem de ser o do proprio tpEvento: 112110 usa DetEvento112110.
+            // Usar o do EConf (110750) rendia rejeicao 493 (schema especifico).
+            DetEvento112110 detEvento = new DetEvento112110();
+            detEvento.setVersao(ConstantesUtil.VERSAO.EVENTO_GENERICO);
+            detEvento.setDescEvento("Informação de efetivo pagamento integral para liberar crédito presumido do adquirente");
+            // TODO 112110: detEvento.setCOrgaoAutor(config.getEstado().getCodigoUF());
+            // TODO 112110: detEvento.setTpAutor("1");
+            detEvento.setCOrgaoAutor("52");
+            detEvento.setTpAutor("1");
+            detEvento.setVerAplic("4.3.0");
+            detEvento.setIndQuitacao("1");
+            // TODO 112110: detEvento.setIndQuitacao("1");
+            generico.setDetEvento(detEvento);
+
+            //Monta o Evento Generico
+            TEnvEventoGenerico enviEvento = EventoGenericoUtil.montaEvento(generico, DetEvento112110.class, EventosEnum.PAGAMENTO_INTEGRAL_CREDITO_PRESUMIDO, config);
+
+            //Envia o Evento Generico
+            TRetEnvEventoGenerico retorno = Nfe.eventoGenerico(config, enviEvento, true);
+
+            //Valida o Retorno do Cancelamento
+            RetornoUtil.validaEventoGenerico(retorno);
+
+            //Resultado
+            System.out.println();
+            retorno.getRetEvento().forEach( resultado -> {
+                System.out.println("# Chave: " + resultado.getInfEvento().getChNFe());
+                System.out.println("# Status: " + resultado.getInfEvento().getCStat() + " - " + resultado.getInfEvento().getXMotivo());
+                System.out.println("# Protocolo: " + resultado.getInfEvento().getNProt());
+            });
+
+            //Cria ProcEvento Generico
+            String proc = EventoGenericoUtil.criaProcEventoGenerico(config, enviEvento, retorno.getRetEvento().get(0));
+            System.out.println();
+            System.out.println("# ProcEvento : " + proc);
+
+        } catch (Exception e) {
+            System.err.println();
+            System.err.println("# Erro: "+e.getMessage());
+        }
+
+    }
+
+}
